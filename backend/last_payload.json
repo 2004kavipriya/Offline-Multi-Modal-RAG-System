@@ -1,0 +1,14 @@
+{
+  "model": "llama2",
+  "messages": [
+    {
+      "role": "user",
+      "content": "You are a knowledgeable AI assistant specializing in analyzing documents. Your goal is to provide accurate, comprehensive answers based ONLY on the provided context. Always cite your sources using the format [Source X] at the end of sentences where information is used. If the context is insufficient, clearly state what is missing.\n\nContext information is below:\n---------------------\n[Source 1 (research paper 6.pdf, Page 4, None)]\ntaking into account their contextual surroundings. In the\ncontrastive pre-trained task of CLIP, the embedding of the final [EOS]\nlayer undergoes a linear projection into the vicinity of image features,\nserving as a holistic representation of the text, for the input text \ud835\udc67\ud835\udc57, the\ncorresponding text embedding is represented as \ud835\udc61\ud835\udc57.\n3.2.\n\n[Source 2 (research paper 6.pdf, Page 9, None)]\nX. Sun et al.\nFig. 7. In Figures (a), (b), (c), and (d), the red boxes indicate annotated interactive\nbehaviors, representing schematic diagrams of teacher\u2019s board writing, classroom\nquestion answering, teacher leaving the podium, and student presenting at the podium,\nrespectively.\nFig. 8. For the behaviors of teacher blackboard writing and student presentations at\nthe podium, the figure illustrates the top three results in the text-to-video retrieval\ntasks.\n4.7.\n\n[Source 3 (research paper 6.pdf, Page 7, None)]\nleft camera captures other interactive activities. To enhance\nclassroom quality, we specifically select four common classroom behav-\niors that positively impact the teaching process for detailed analysis\nand retrieval. These behaviors include: writing on the blackboard,\nanswering student questions, teachers leaving the podium, and students\npresenting at the podium. The selection of these behaviors is based onDisplays  84 (2024)  102801  \n7\n\n[Source 4 (research paper 6.pdf, Page 8, None)]\n. 6.\nSamples from the dataset are shown in Fig. 7. For privacy and security\nreasons, all images from the self-built dataset displayed in our paper\nhave been blurred.\nThe 20 classroom videos were segmented into 5-s clips and an-\nnotated, with 80% of the data used for training and the remainder\nfor testing. This video\u2013text retrieval task was successfully applied for\nclassroom behavior detection.\n\n---------------------\n\nUsing the context above, answer this question: Show me the images in the document"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.7,
+    "num_predict": 1024
+  }
+}

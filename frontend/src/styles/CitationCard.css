@@ -1,0 +1,114 @@
+/* Citation Card */
+.citation-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: all var(--transition-base);
+}
+
+.citation-card:hover {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-md);
+}
+
+.citation-card.expanded {
+    border-color: var(--accent-primary);
+}
+
+.citation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    cursor: pointer;
+    user-select: none;
+}
+
+.citation-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+}
+
+.citation-number {
+    color: var(--accent-primary);
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.citation-icon {
+    font-size: 1.125rem;
+}
+
+.citation-filename {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.9375rem;
+}
+
+.citation-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.meta-badge {
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.expand-icon {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-left: var(--spacing-sm);
+    transition: transform var(--transition-fast);
+}
+
+.citation-card.expanded .expand-icon {
+    transform: rotate(90deg);
+}
+
+.citation-content {
+    padding: 0 var(--spacing-md) var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    animation: fadeIn 0.2s ease;
+}
+
+.citation-excerpt {
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    margin-top: var(--spacing-md);
+}
+
+.excerpt-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-sm);
+}
+
+.excerpt-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.9375rem;
+}
+
+.citation-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--spacing-md);
+}
+
+.relevance-score {
+    color: var(--success);
+    font-size: 0.875rem;
+    font-weight: 600;
+}

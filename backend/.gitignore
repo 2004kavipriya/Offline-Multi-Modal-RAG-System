@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# FastAPI
+*.log
+
+# Data directories
+data/uploads/*
+data/processed/*
+data/vector_db/*
+!data/uploads/.gitkeep
+!data/processed/.gitkeep
+!data/vector_db/.gitkeep
+
+# Models
+models/*
+!models/.gitkeep
+
+# Environment
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+*.bak
