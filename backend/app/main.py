@@ -8,7 +8,7 @@ import logging
 
 from app.config import get_settings, ensure_directories
 from app.models.db_session import init_db
-from app.api import upload, search, query
+from app.api import upload, search, query, documents
 from app.models.schemas import HealthResponse
 from app import __version__
 
@@ -46,6 +46,7 @@ app.add_middleware(
 app.include_router(upload.router)
 app.include_router(search.router)
 app.include_router(query.router)
+app.include_router(documents.router)
 
 
 @app.get("/", tags=["root"])

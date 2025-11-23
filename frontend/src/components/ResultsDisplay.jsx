@@ -80,13 +80,42 @@ function ResultsDisplay({ results, loading }) {
                                     </span>
                                 </div>
                                 <h3 className="result-filename">{result.filename}</h3>
+
+                                {/* Display image if it's an image type */}
+                                {result.document_type === 'image' && result.document_id && (
+                                    <div className="result-image-container">
+                                        <img
+                                            src={`/api/documents/${result.document_id}/download`}
+                                            alt={result.filename}
+                                            className="result-image"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                )}
+
                                 <p className="result-content">{result.content}</p>
-                                {result.page_number && (
-                                    <p className="result-meta">Page {result.page_number}</p>
-                                )}
-                                {result.timestamp && (
-                                    <p className="result-meta">⏱️ {result.timestamp}</p>
-                                )}
+
+                                <div className="result-footer">
+                                    <div className="result-metadata">
+                                        {result.page_number && (
+                                            <p className="result-meta">Page {result.page_number}</p>
+                                        )}
+                                        {result.timestamp && (
+                                            <p className="result-meta">⏱️ {result.timestamp}</p>
+                                        )}
+                                    </div>
+
+                                    {result.document_id && (
+                                        <a
+                                            href={`/api/documents/${result.document_id}/download${result.page_number ? `?page=${result.page_number}#page=${result.page_number}` : ''}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="result-view-button"
+                                        >
+                                            📄 View Document{result.page_number ? ` (Page ${result.page_number})` : ''}
+                                        </a>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>

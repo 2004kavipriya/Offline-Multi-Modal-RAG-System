@@ -80,6 +80,22 @@
     animation: fadeIn 0.2s ease;
 }
 
+.citation-image-preview {
+    margin: var(--spacing-md) 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+}
+
+.citation-image {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    object-fit: contain;
+    display: block;
+}
+
 .citation-excerpt {
     padding: var(--spacing-md);
     background: var(--bg-card);
@@ -103,7 +119,8 @@
 
 .citation-footer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     margin-top: var(--spacing-md);
 }
 
@@ -111,4 +128,24 @@
     color: var(--success);
     font-size: 0.875rem;
     font-weight: 600;
+}
+
+.view-document-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.view-document-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.5);
 }

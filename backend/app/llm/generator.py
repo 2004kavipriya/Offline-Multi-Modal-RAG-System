@@ -16,7 +16,7 @@ class LLMGenerator:
     
     def __init__(
         self,
-        model_name: str = "llama2",
+        model_name: str = "mistral",
         base_url: str = "http://localhost:11434",
         temperature: float = 0.7,
         max_tokens: int = 1024

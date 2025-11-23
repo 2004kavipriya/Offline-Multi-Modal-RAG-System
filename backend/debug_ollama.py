@@ -26,7 +26,7 @@ Using the context above, answer this question: What is this text about?"""
     ]
 
     payload = {
-        "model": "llama2:latest",
+        "model": "mistral:latest",
         "messages": messages,
         "stream": False,
         "options": {

@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     text_embedding_model: str = "all-MiniLM-L6-v2"
     image_embedding_model: str = "openai/clip-vit-base-patch32"
     whisper_model: str = "base"
-    llm_model: str = "llama2:latest"
+    llm_model: str = "mistral"
     
     # Chunking Settings
     chunk_size: int = 800

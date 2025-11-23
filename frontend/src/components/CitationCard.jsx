@@ -32,6 +32,18 @@ function CitationCard({ citation, expanded, onToggle }) {
 
             {expanded && (
                 <div className="citation-content">
+                    {/* Show image preview for image documents */}
+                    {citation.document_type === 'image' && citation.document_id && (
+                        <div className="citation-image-preview">
+                            <img
+                                src={`/api/documents/${citation.document_id}/download`}
+                                alt={citation.filename}
+                                className="citation-image"
+                                loading="lazy"
+                            />
+                        </div>
+                    )}
+
                     <div className="citation-excerpt">
                         <p className="excerpt-label">Excerpt:</p>
                         <p className="excerpt-text">{citation.excerpt}</p>
@@ -40,6 +52,15 @@ function CitationCard({ citation, expanded, onToggle }) {
                         <span className="relevance-score">
                             Relevance: {(citation.relevance_score * 100).toFixed(0)}%
                         </span>
+                        <a
+                            href={`/api/documents/${citation.document_id}/download${citation.page_number ? `?page=${citation.page_number}#page=${citation.page_number}` : ''}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="view-document-button"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            📄 View Document{citation.page_number ? ` (Page ${citation.page_number})` : ''}
+                        </a>
                     </div>
                 </div>
             )}

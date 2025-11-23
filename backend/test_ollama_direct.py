@@ -12,7 +12,7 @@ Answer this question: What is the capital of France?
 [/INST]"""
 
     payload = {
-        "model": "llama2:latest",
+        "model": "mistral:latest",
         "prompt": prompt,
         "stream": False,
         "options": {

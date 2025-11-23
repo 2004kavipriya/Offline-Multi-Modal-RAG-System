@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import QueryInterface from './components/QueryInterface'
 import FileUpload from './components/FileUpload'
+import DocumentsList from './components/DocumentsList'
 import ResultsDisplay from './components/ResultsDisplay'
 import './styles/App.css'
 
 function App() {
     const [results, setResults] = useState(null)
     const [loading, setLoading] = useState(false)
-    const [activeTab, setActiveTab] = useState('query') // 'query' or 'upload'
+    const [activeTab, setActiveTab] = useState('query') // 'query', 'upload', or 'documents'
 
     const handleQueryResults = (queryResults) => {
         setResults(queryResults)
@@ -49,6 +50,13 @@ function App() {
                             <span className="tab-icon">📤</span>
                             Upload Documents
                         </button>
+                        <button
+                            className={`tab-button ${activeTab === 'documents' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('documents')}
+                        >
+                            <span className="tab-icon">📚</span>
+                            My Documents
+                        </button>
                     </div>
 
                     {/* Tab Content */}
@@ -63,9 +71,13 @@ function App() {
                                     <ResultsDisplay results={results} loading={loading} />
                                 )}
                             </div>
-                        ) : (
+                        ) : activeTab === 'upload' ? (
                             <div className="upload-section">
                                 <FileUpload />
+                            </div>
+                        ) : (
+                            <div className="documents-section">
+                                <DocumentsList />
                             </div>
                         )}
                     </div>

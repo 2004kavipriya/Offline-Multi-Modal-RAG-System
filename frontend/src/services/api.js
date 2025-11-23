@@ -117,4 +117,28 @@ export const checkLLMHealth = async () => {
     return response.data;
 };
 
+/**
+ * Get all uploaded documents
+ */
+export const getDocuments = async () => {
+    const response = await api.get('/documents/');
+    return response.data;
+};
+
+/**
+ * Get a specific document by ID
+ */
+export const getDocument = async (documentId) => {
+    const response = await api.get(`/documents/${documentId}`);
+    return response.data;
+};
+
+/**
+ * Delete a document by ID
+ */
+export const deleteDocument = async (documentId) => {
+    const response = await api.delete(`/documents/${documentId}`);
+    return response.data;
+};
+
 export default api;

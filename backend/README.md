@@ -61,7 +61,7 @@ Download and install from: https://github.com/UB-Mannheim/tesseract/wiki
 # Install Ollama from https://ollama.ai
 
 # Pull a model
-ollama pull llama2
+ollama pull mistral
 ```
 
 ### 6. Configure Environment
@@ -147,7 +147,7 @@ backend/
 - **Text Embeddings**: sentence-transformers/all-MiniLM-L6-v2 (384 dim)
 - **Image Embeddings**: openai/clip-vit-base-patch32 (512 dim)
 - **Speech-to-Text**: OpenAI Whisper (base)
-- **LLM**: llama2 (via Ollama)
+- **LLM**: mistral (via Ollama)
 
 ## Development
 
