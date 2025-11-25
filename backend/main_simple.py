@@ -169,7 +169,8 @@ async def upload_document(file: UploadFile = File(...)):
             "modality": "text",
             "file_size": temp_path.stat().st_size,
             "minio_path": minio_path,
-            "processed": 1  # Processing
+            "processed": 1,  # Processing
+            "upload_date": datetime.now().isoformat()
         }
         documents_store.append(doc_info)
         
@@ -241,11 +242,25 @@ async def upload_image(file: UploadFile = File(...)):
             "modality": "image",
             "file_size": temp_path.stat().st_size,
             "minio_path": minio_path,
-            "processed": 0
+            "processed": 2,  # Mark as completed
+            "upload_date": datetime.now().isoformat()
         }
         documents_store.append(doc_info)
         
+        # Generate CLIP embedding and add to image index (BEFORE deleting temp file!)
+        try:
+            from embedding_service import add_image_to_index, save_state
+            add_image_to_index(doc_info["id"], str(temp_path))
+            save_state(DATA_DIR)
+            logger.info(f"Generated CLIP embedding for image: {file.filename}")
+        except Exception as e:
+            logger.error(f"Error generating image embedding: {e}")
+        
+        # NOW delete the temp file
         temp_path.unlink()
+        
+        # Save metadata
+        save_metadata()
         
         logger.info(f"Uploaded image: {file.filename}")
         
@@ -253,7 +268,7 @@ async def upload_image(file: UploadFile = File(...)):
             "message": "Image uploaded successfully",
             "document_id": doc_info["id"],
             "filename": file.filename,
-            "status": "uploaded"
+            "status": "completed"
         }
         
     except Exception as e:
@@ -286,9 +301,13 @@ async def upload_audio(file: UploadFile = File(...)):
             "modality": "audio",
             "file_size": temp_path.stat().st_size,
             "minio_path": minio_path,
-            "processed": 0
+            "processed": 2,  # Mark as completed
+            "upload_date": datetime.now().isoformat()
         }
         documents_store.append(doc_info)
+        
+        # Save metadata
+        save_metadata()
         
         temp_path.unlink()
         
@@ -298,7 +317,7 @@ async def upload_audio(file: UploadFile = File(...)):
             "message": "Audio uploaded successfully",
             "document_id": doc_info["id"],
             "filename": file.filename,
-            "status": "uploaded"
+            "status": "completed"
         }
         
     except Exception as e:
@@ -590,6 +609,83 @@ async def find_similar_documents(file: UploadFile = File(...)):
         if temp_path and temp_path.exists():
             temp_path.unlink()
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+
+@app.post("/api/find-similar-image")
+async def find_similar_images(file: UploadFile = File(...)):
+    """Find similar images by uploading an image."""
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in [".jpg", ".jpeg", ".png", ".gif", ".bmp"]:
+        raise HTTPException(status_code=400, detail="Only image files (JPG, PNG, GIF, BMP) are supported")
+    
+    temp_path = None
+    try:
+        # Generate unique filename
+        unique_filename = f"temp_{uuid.uuid4()}{file_ext}"
+        temp_path = UPLOAD_DIR / unique_filename
+        
+        # Save uploaded image temporarily
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Use CLIP-based similarity search
+        from embedding_service import search_similar_images
+        
+        search_results = search_similar_images(str(temp_path), top_k=20)
+        
+        # Clean up temp file
+        if temp_path.exists():
+            temp_path.unlink()
+            temp_path = None
+        
+        if not search_results:
+            return {
+                "uploaded_filename": file.filename,
+                "similar_images": [],
+                "message": "No similar images found in database"
+            }
+        
+        # Build response with actual similarity scores
+        # Only include images with similarity > 0.6 (60%)
+        SIMILARITY_THRESHOLD = 0.6
+        similar_images = []
+        
+        for result in search_results:
+            # Skip low similarity matches
+            if result["similarity"] < SIMILARITY_THRESHOLD:
+                continue
+                
+            doc = next((d for d in documents_store if d["id"] == result["doc_id"]), None)
+            if doc and doc.get("modality") == "image":
+                similar_images.append({
+                    "document_id": doc["id"],
+                    "filename": doc["original_filename"],
+                    "file_type": doc["file_type"],
+                    "similarity": result["similarity"],
+                    "url": f"/api/documents/{doc['id']}/content"
+                })
+        
+        # Sort by similarity (highest first)
+        similar_images.sort(key=lambda x: x["similarity"], reverse=True)
+        
+        logger.info(f"Found {len(similar_images)} similar images using CLIP (threshold: {SIMILARITY_THRESHOLD})")
+        
+        return {
+            "uploaded_filename": file.filename,
+            "similar_images": similar_images[:10],  # Top 10
+            "total_matches": len(similar_images)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Find similar image error: {e}")
+        # Clean up temp file if it exists
+        if temp_path and temp_path.exists():
+            temp_path.unlink()
+        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+
+
 
 
 if __name__ == "__main__":

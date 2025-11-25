@@ -3,12 +3,13 @@ import SearchInterface from '../components/SearchInterface';
 import ResultsDisplay from '../components/ResultsDisplay';
 import DocumentFilter from '../components/DocumentFilter';
 import SimilaritySearch from '../components/SimilaritySearch';
+import ImageSearch from '../components/ImageSearch';
 import './Search.css';
 
 function Search() {
     const [results, setResults] = useState(null);
     const [selectedDocuments, setSelectedDocuments] = useState([]);
-    const [searchMode, setSearchMode] = useState('text'); // 'text' or 'similarity'
+    const [searchMode, setSearchMode] = useState('text'); // 'text', 'similarity', or 'image'
 
     const handleResults = (data) => {
         setResults(data);
@@ -40,6 +41,12 @@ function Search() {
                     >
                         📤 Find Similar
                     </button>
+                    <button
+                        className={`mode-btn ${searchMode === 'image' ? 'active' : ''}`}
+                        onClick={() => setSearchMode('image')}
+                    >
+                        🖼️ Image Search
+                    </button>
                 </div>
 
                 {searchMode === 'text' ? (
@@ -69,8 +76,10 @@ function Search() {
                             </div>
                         )}
                     </>
-                ) : (
+                ) : searchMode === 'similarity' ? (
                     <SimilaritySearch />
+                ) : (
+                    <ImageSearch />
                 )}
             </div>
         </div>
