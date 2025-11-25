@@ -5,8 +5,6 @@ function ChunksViewer({ isOpen, onClose, document, chunks }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [copiedIndex, setCopiedIndex] = useState(null);
 
-    if (!isOpen) return null;
-
     const filteredChunks = useMemo(() => {
         if (!chunks) return [];
         if (!searchQuery) return chunks;
@@ -30,6 +28,8 @@ function ChunksViewer({ isOpen, onClose, document, chunks }) {
                 <span key={i} className="highlight">{part}</span> : part
         );
     };
+
+    if (!isOpen) return null;
 
     return (
         <div className="modal-overlay" onClick={onClose}>
