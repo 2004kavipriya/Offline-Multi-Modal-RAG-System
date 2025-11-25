@@ -22,7 +22,10 @@ def generate_answer(question: str, context_chunks: list[dict]) -> dict:
                 "source": chunk.get("filename", "Unknown"),
                 "type": "text",
                 "content": chunk["content"][:200] + "..." if len(chunk["content"]) > 200 else chunk["content"],
-                "similarity": chunk.get("similarity", 0.0)
+                "full_content": chunk["content"],  # Full chunk for "View Context"
+                "similarity": chunk.get("similarity", 0.0),
+                "document_id": chunk.get("document_id"),  # For opening document
+                "chunk_index": chunk.get("chunk_index", 0)  # For page navigation
             })
             
             # Add metadata context if available

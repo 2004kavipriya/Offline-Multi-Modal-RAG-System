@@ -7,8 +7,13 @@ function CitationPanel({ citation, onClose }) {
         <div className="citation-panel-overlay" onClick={onClose}>
             <div className="citation-panel glass-card" onClick={(e) => e.stopPropagation()}>
                 <div className="panel-header">
-                    <h3>Citation Details [{citation.id}]</h3>
-                    <button className="close-button btn btn-ghost" onClick={onClose}>
+                    <div>
+                        <h3>Source [{citation.id}]</h3>
+                        <div className="relevance-display">
+                            Relevance: <strong>{(citation.similarity * 100).toFixed(1)}%</strong>
+                        </div>
+                    </div>
+                    <button className="btn close-button" onClick={onClose}>
                         ✕
                     </button>
                 </div>
@@ -17,47 +22,51 @@ function CitationPanel({ citation, onClose }) {
                     <div className="citation-detail">
                         <label>Type</label>
                         <div className="detail-value">
-                            {citation.type === 'text' && '📄 Document'}
+                            {citation.type === 'text' && '📄 Text'}
                             {citation.type === 'image' && '🖼️ Image'}
                             {citation.type === 'audio' && '🎵 Audio'}
                         </div>
                     </div>
 
                     <div className="citation-detail">
-                        <label>Source</label>
+                        <label>Source Document</label>
                         <div className="detail-value">{citation.source}</div>
                     </div>
 
                     {citation.page && (
                         <div className="citation-detail">
                             <label>Page</label>
-                            <div className="detail-value">Page {citation.page}</div>
+                            <div className="detail-value">{citation.page}</div>
                         </div>
                     )}
 
-                    {citation.start_time !== undefined && (
-                        <div className="citation-detail">
-                            <label>Timestamp</label>
-                            <div className="detail-value">
-                                {citation.start_time.toFixed(1)}s - {citation.end_time.toFixed(1)}s
-                            </div>
+                    <div className="citation-detail">
+                        <label>Retrieved Context</label>
+                        <div className="detail-value context-content">
+                            {citation.full_content || citation.content}
                         </div>
-                    )}
+                    </div>
 
-                    {citation.url && citation.type === 'image' && (
+                    {citation.image_url && (
                         <div className="citation-detail">
-                            <label>Preview</label>
+                            <label>Image Preview</label>
                             <div className="image-preview">
-                                <img src={citation.url} alt={citation.source} />
+                                <img src={citation.image_url} alt="Citation" />
                             </div>
                         </div>
                     )}
                 </div>
 
                 <div className="panel-footer">
-                    <button className="btn btn-secondary" onClick={onClose}>
-                        Close
-                    </button>
+                    {citation.document_id && (
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => window.open(`/api/documents/${citation.document_id}/content`, '_blank')}
+                        >
+                            📄 Open Full Document
+                        </button>
+                    )}
+                    <button className="btn" onClick={onClose}>Close</button>
                 </div>
             </div>
         </div>

@@ -91,32 +91,60 @@ function ResultsDisplay({ results }) {
                 <div className="citations-section">
                     <h4 className="citations-header">Sources ({citations.length})</h4>
                     <div className="citations-grid">
-                        {citations.map((citation) => (
-                            <div
-                                key={citation.id}
-                                className="citation-card glass-card"
-                                onClick={() => setSelectedCitation(citation)}
-                            >
-                                <div className="citation-number">[{citation.id}]</div>
-                                <div className="citation-info">
-                                    <div className="citation-type">
-                                        {citation.type === 'text' && '📄'}
-                                        {citation.type === 'image' && '🖼️'}
-                                        {citation.type === 'audio' && '🎵'}
-                                        <span className="badge badge-info">{citation.type}</span>
-                                    </div>
-                                    <div className="citation-source">{citation.source}</div>
-                                    {citation.page && (
-                                        <div className="citation-meta">Page {citation.page}</div>
-                                    )}
-                                    {citation.start_time !== undefined && (
-                                        <div className="citation-meta">
-                                            {citation.start_time.toFixed(1)}s - {citation.end_time.toFixed(1)}s
+                        {citations
+                            .sort((a, b) => (b.similarity || 0) - (a.similarity || 0))  // Sort by relevance
+                            .map((citation) => (
+                                <div
+                                    key={citation.id}
+                                    className="citation-card glass-card"
+                                >
+                                    <div className="citation-header-row">
+                                        <div className="citation-number">[{citation.id}]</div>
+                                        <div className="relevance-badge" title={`Relevance: ${(citation.similarity * 100).toFixed(1)}%`}>
+                                            {(citation.similarity * 100).toFixed(0)}%
                                         </div>
-                                    )}
+                                    </div>
+
+                                    <div className="relevance-bar">
+                                        <div
+                                            className="relevance-fill"
+                                            style={{ width: `${citation.similarity * 100}%` }}
+                                        ></div>
+                                    </div>
+
+                                    <div className="citation-info">
+                                        <div className="citation-type">
+                                            {citation.type === 'text' && '📄'}
+                                            {citation.type === 'image' && '🖼️'}
+                                            {citation.type === 'audio' && '🎵'}
+                                            <span className="badge badge-info">{citation.type}</span>
+                                        </div>
+                                        <div className="citation-source">{citation.source}</div>
+                                        {citation.page && (
+                                            <div className="citation-meta">Page {citation.page}</div>
+                                        )}
+                                    </div>
+
+                                    <div className="citation-actions">
+                                        <button
+                                            className="btn-small btn-primary"
+                                            onClick={() => setSelectedCitation(citation)}
+                                            title="View retrieved context"
+                                        >
+                                            👁️ View Context
+                                        </button>
+                                        {citation.document_id && (
+                                            <button
+                                                className="btn-small btn-secondary"
+                                                onClick={() => window.open(`/api/documents/${citation.document_id}/content`, '_blank')}
+                                                title="Open full document"
+                                            >
+                                                📄 Open Doc
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
                     </div>
                 </div>
             )}
