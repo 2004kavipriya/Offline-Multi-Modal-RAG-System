@@ -73,12 +73,8 @@ export const hybridSearch = async (query, topK = 5, modalities = ['text', 'image
 };
 
 // Query endpoint
-export const queryRAG = async (question, topK = 5, includeModalities = ['text', 'image', 'audio']) => {
-    return api.post('/query/', {
-        question,
-        top_k: topK,
-        include_modalities: includeModalities,
-    });
+export const queryRAG = async (requestBody) => {
+    return api.post('/query/', requestBody);
 };
 
 // Document endpoints

@@ -54,8 +54,14 @@ def add_chunks_to_index(doc_id: int, chunks: list[dict]):
         logger.info(f"Added {len(embeddings)} chunks to FAISS index")
 
 
-def search_similar_chunks(query: str, top_k: int = 5) -> list[dict]:
-    """Search for similar chunks using FAISS."""
+def search_similar_chunks(query: str, top_k: int = 5, filter_doc_ids: list[int] = None) -> list[dict]:
+    """Search for similar chunks using FAISS.
+    
+    Args:
+        query: Search query text
+        top_k: Number of results to return
+        filter_doc_ids: Optional list of document IDs to filter results
+    """
     if faiss_index.ntotal == 0:
         return []
     
@@ -63,19 +69,31 @@ def search_similar_chunks(query: str, top_k: int = 5) -> list[dict]:
     query_embedding = generate_embedding(query)
     query_embedding = np.array([query_embedding])
     
+    # If filtering by document, we need to search more to account for filtering
+    search_k = top_k * 3 if filter_doc_ids else top_k
+    
     # Search
-    distances, indices = faiss_index.search(query_embedding, min(top_k, faiss_index.ntotal))
+    distances, indices = faiss_index.search(query_embedding, min(search_k, faiss_index.ntotal))
     
     results = []
     for dist, idx in zip(distances[0], indices[0]):
         if idx < len(index_to_chunk_map):
             chunk_info = index_to_chunk_map[idx]
+            
+            # Apply document filter if specified
+            if filter_doc_ids and chunk_info["doc_id"] not in filter_doc_ids:
+                continue
+            
             results.append({
                 "doc_id": chunk_info["doc_id"],
                 "chunk_index": chunk_info["chunk_index"],
                 "content": chunk_info["content"],
                 "similarity": float(dist)
             })
+            
+            # Stop when we have enough filtered results
+            if len(results) >= top_k:
+                break
     
     return results
 

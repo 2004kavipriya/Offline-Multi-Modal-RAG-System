@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { queryRAG } from '../api';
 import './SearchInterface.css';
 
-function SearchInterface({ onResults }) {
+function SearchInterface({ onResults, selectedDocuments = [] }) {
     const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
     const [modalities, setModalities] = useState({
         text: true,
         image: true,
@@ -19,8 +20,16 @@ function SearchInterface({ onResults }) {
         setLoading(true);
 
         try {
-            const selectedModalities = Object.keys(modalities).filter(m => modalities[m]);
-            const response = await queryRAG(query, 5, selectedModalities);
+            const requestBody = {
+                question: query,
+                top_k: 5
+            };
+
+            if (selectedDocuments.length > 0) {
+                requestBody.document_ids = selectedDocuments;
+            }
+
+            const response = await queryRAG(requestBody);
 
             if (onResults) {
                 onResults(response.data);
@@ -31,6 +40,45 @@ function SearchInterface({ onResults }) {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleVoiceInput = () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            setIsRecording(true);
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            setQuery(transcript);
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            setIsRecording(false);
+            if (event.error === 'no-speech') {
+                alert('No speech detected. Please try again.');
+            } else if (event.error === 'not-allowed') {
+                alert('Microphone access denied. Please allow microphone access.');
+            }
+        };
+
+        recognition.onend = () => {
+            setIsRecording(false);
+        };
+
+        recognition.start();
     };
 
     const toggleModality = (modality) => {
@@ -52,6 +100,15 @@ function SearchInterface({ onResults }) {
                         onChange={(e) => setQuery(e.target.value)}
                         disabled={loading}
                     />
+                    <button
+                        type="button"
+                        className={`mic-button ${isRecording ? 'recording' : ''}`}
+                        onClick={handleVoiceInput}
+                        disabled={loading}
+                        title="Voice input"
+                    >
+                        {isRecording ? '🔴' : '🎤'}
+                    </button>
                     <button
                         type="submit"
                         className="search-button btn btn-primary"

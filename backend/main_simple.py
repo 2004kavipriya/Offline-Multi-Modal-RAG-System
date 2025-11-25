@@ -395,6 +395,7 @@ async def query(request: dict):
     """Query endpoint with RAG."""
     question = request.get("question", "")
     top_k = request.get("top_k", 5)
+    document_ids = request.get("document_ids", None)  # Optional filter by document IDs
     
     if not question:
         return {
@@ -416,8 +417,8 @@ async def query(request: dict):
                 "context_used": {"text_chunks": 0, "images": 0, "audio_segments": 0}
             }
         
-        # Search for relevant chunks
-        search_results = search_similar_chunks(question, top_k)
+        # Search for relevant chunks (with optional document filter)
+        search_results = search_similar_chunks(question, top_k, filter_doc_ids=document_ids)
         
         if not search_results:
             return {
