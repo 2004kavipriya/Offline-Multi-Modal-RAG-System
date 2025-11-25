@@ -496,6 +496,102 @@ async def search_text(request: dict):
         return []
 
 
+@app.post("/api/find-similar")
+async def find_similar_documents(file: UploadFile = File(...)):
+    """Find similar documents by uploading a file."""
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in [".pdf", ".docx", ".doc", ".txt"]:
+        raise HTTPException(status_code=400, detail="Only PDF, DOCX, and TXT files are supported")
+    
+    temp_path = None
+    try:
+        # Generate unique filename
+        unique_filename = f"temp_{uuid.uuid4()}{file_ext}"
+        temp_path = UPLOAD_DIR / unique_filename
+        
+        # Save uploaded file temporarily
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Extract text from file
+        from text_processor import extract_text_from_pdf, extract_text_from_docx
+        
+        if file_ext == ".pdf":
+            text = extract_text_from_pdf(temp_path)
+        elif file_ext in [".docx", ".doc"]:
+            text = extract_text_from_docx(temp_path)
+        else:  # .txt
+            with open(temp_path, "r", encoding="utf-8", errors="ignore") as f:
+                text = f.read()
+        
+        # Clean up temp file
+        if temp_path.exists():
+            temp_path.unlink()
+            temp_path = None
+        
+        if not text or len(text.strip()) < 10:
+            raise HTTPException(status_code=400, detail="Could not extract meaningful text from file")
+        
+        # Search for similar chunks using first ~5000 chars
+        from embedding_service import search_similar_chunks
+        search_results = search_similar_chunks(text[:5000], top_k=30)
+        
+        if not search_results:
+            return {
+                "uploaded_filename": file.filename,
+                "similar_documents": [],
+                "message": "No similar documents found"
+            }
+        
+        # Group results by document and calculate average similarity
+        from collections import defaultdict
+        doc_scores = defaultdict(list)
+        doc_chunks = defaultdict(list)
+        
+        for result in search_results:
+            doc_id = result["doc_id"]
+            doc_scores[doc_id].append(result["similarity"])
+            doc_chunks[doc_id].append({
+                "content": result["content"][:200],  # Preview
+                "similarity": result["similarity"]
+            })
+        
+        # Build response
+        similar_docs = []
+        for doc_id, scores in doc_scores.items():
+            doc = next((d for d in documents_store if d["id"] == doc_id), None)
+            if doc:
+                avg_similarity = sum(scores) / len(scores)
+                similar_docs.append({
+                    "document_id": doc["id"],
+                    "filename": doc["original_filename"],
+                    "file_type": doc["file_type"],
+                    "similarity": round(avg_similarity, 4),
+                    "match_count": len(scores),
+                    "top_chunks": sorted(doc_chunks[doc_id], key=lambda x: x["similarity"], reverse=True)[:3]
+                })
+        
+        # Sort by similarity (highest first)
+        similar_docs.sort(key=lambda x: x["similarity"], reverse=True)
+        
+        logger.info(f"Found {len(similar_docs)} similar documents for '{file.filename}'")
+        
+        return {
+            "uploaded_filename": file.filename,
+            "similar_documents": similar_docs[:10],  # Top 10
+            "total_matches": len(similar_docs)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Find similar error: {e}")
+        # Clean up temp file if it exists
+        if temp_path and temp_path.exists():
+            temp_path.unlink()
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
