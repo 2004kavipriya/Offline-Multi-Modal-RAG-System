@@ -92,7 +92,7 @@ function ResultsDisplay({ results }) {
                     <h4 className="citations-header">Sources ({citations.length})</h4>
                     <div className="citations-grid">
                         {citations
-                            .sort((a, b) => (b.similarity || 0) - (a.similarity || 0))  // Sort by relevance
+                            .sort((a, b) => (b.similarity || 0) - (a.similarity || 0))
                             .map((citation) => (
                                 <div
                                     key={citation.id}
@@ -134,13 +134,22 @@ function ResultsDisplay({ results }) {
                                             👁️ View Context
                                         </button>
                                         {citation.document_id && (
-                                            <button
-                                                className="btn-small btn-secondary"
-                                                onClick={() => window.open(`/api/documents/${citation.document_id}/content`, '_blank')}
-                                                title="Open full document"
-                                            >
-                                                📄 Open Doc
-                                            </button>
+                                            <>
+                                                <button
+                                                    className="btn-small btn-secondary"
+                                                    onClick={() => window.location.href = '/documents'}
+                                                    title="View in Documents page"
+                                                >
+                                                    📁 View File
+                                                </button>
+                                                <button
+                                                    className="btn-small btn-secondary"
+                                                    onClick={() => window.open(`/api/documents/${citation.document_id}/content`, '_blank')}
+                                                    title="Open full PDF in new tab"
+                                                >
+                                                    📄 Open PDF
+                                                </button>
+                                            </>
                                         )}
                                     </div>
                                 </div>

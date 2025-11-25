@@ -435,7 +435,9 @@ async def query(request: dict):
                     "content": result["content"],
                     "filename": doc["original_filename"],
                     "similarity": result["similarity"],
-                    "metadata": doc.get("metadata", {})
+                    "metadata": doc.get("metadata", {}),
+                    "document_id": doc["id"],  # For navigation
+                    "chunk_index": result.get("chunk_index", 0)  # For page estimation
                 })
         
         # Generate answer using RAG
