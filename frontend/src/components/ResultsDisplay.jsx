@@ -1,9 +1,40 @@
 import { useState } from 'react';
 import CitationPanel from './CitationPanel';
+import { exportResults } from '../api';
 import './ResultsDisplay.css';
 
-function ResultsDisplay({ results }) {
+function ResultsDisplay({ results, question }) {
     const [selectedCitation, setSelectedCitation] = useState(null);
+    const [showExportMenu, setShowExportMenu] = useState(false);
+    const [exporting, setExporting] = useState(false);
+
+    const handleExport = async (format) => {
+        setExporting(true);
+        try {
+            const response = await exportResults(format, {
+                question: question || '',
+                answer: results.answer,
+                citations: results.citations
+            });
+
+            // Create download link
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `search_results_${Date.now()}.${format}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            setShowExportMenu(false);
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert('Export failed. Please try again.');
+        } finally {
+            setExporting(false);
+        }
+    };
 
     if (!results) {
         return null;
@@ -63,22 +94,43 @@ function ResultsDisplay({ results }) {
             <div className="answer-section glass-card animate-fade-in">
                 <div className="answer-header">
                     <h3>Answer</h3>
-                    <div className="context-badges flex gap-sm">
-                        {context_used.text_chunks > 0 && (
-                            <span className="badge badge-info">
-                                📄 {context_used.text_chunks} docs
-                            </span>
-                        )}
-                        {context_used.images > 0 && (
-                            <span className="badge badge-info">
-                                🖼️ {context_used.images} images
-                            </span>
-                        )}
-                        {context_used.audio_segments > 0 && (
-                            <span className="badge badge-info">
-                                🎵 {context_used.audio_segments} audio
-                            </span>
-                        )}
+                    <div className="answer-actions">
+                        <div className="context-badges flex gap-sm">
+                            {context_used.text_chunks > 0 && (
+                                <span className="badge badge-info">
+                                    📄 {context_used.text_chunks} docs
+                                </span>
+                            )}
+                            {context_used.images > 0 && (
+                                <span className="badge badge-info">
+                                    🖼️ {context_used.images} images
+                                </span>
+                            )}
+                            {context_used.audio_segments > 0 && (
+                                <span className="badge badge-info">
+                                    🎵 {context_used.audio_segments} audio
+                                </span>
+                            )}
+                        </div>
+                        <div className="export-container">
+                            <button
+                                className="export-btn"
+                                onClick={() => setShowExportMenu(!showExportMenu)}
+                                disabled={exporting}
+                            >
+                                📥 Export
+                            </button>
+                            {showExportMenu && (
+                                <div className="export-menu">
+                                    <button onClick={() => handleExport('pdf')}>
+                                        📄 PDF
+                                    </button>
+                                    <button onClick={() => handleExport('docx')}>
+                                        📝 DOCX
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

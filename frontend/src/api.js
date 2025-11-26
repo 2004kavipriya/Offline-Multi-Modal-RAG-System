@@ -99,7 +99,19 @@ export const deleteDocument = async (documentId) => {
 };
 
 export const getDownloadUrl = async (documentId) => {
-    return api.get(`/documents/${documentId}/download`);
+    return api.get(`/documents/${documentId}/download`).then(response => response.data);
+};
+
+// Export results as PDF or DOCX
+export const exportResults = async (format, data) => {
+    return api.post('/export', {
+        format,
+        question: data.question,
+        answer: data.answer,
+        citations: data.citations
+    }, {
+        responseType: 'blob' // Important for file download
+    });
 };
 
 export default api;

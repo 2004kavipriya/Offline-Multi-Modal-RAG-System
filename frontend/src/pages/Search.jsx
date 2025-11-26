@@ -10,13 +10,15 @@ import SearchHistorySidebar from '../components/SearchHistorySidebar';
 
 function Search() {
     const [results, setResults] = useState(null);
+    const [currentQuestion, setCurrentQuestion] = useState('');
     const [selectedDocuments, setSelectedDocuments] = useState([]);
     const [advancedFilters, setAdvancedFilters] = useState(null);
     const [searchMode, setSearchMode] = useState('text'); // 'text', 'similarity', or 'image'
     const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed
 
-    const handleResults = (data) => {
+    const handleResults = (data, question) => {
         setResults(data);
+        setCurrentQuestion(question || '');
     };
 
     const handleFilterChange = (docIds) => {
@@ -86,7 +88,7 @@ function Search() {
                                 advancedFilters={advancedFilters}
                             />
 
-                            {results && <ResultsDisplay results={results} />}
+                            {results && <ResultsDisplay results={results} question={currentQuestion} />}
 
                             {!results && (
                                 <div className="search-placeholder glass-card">

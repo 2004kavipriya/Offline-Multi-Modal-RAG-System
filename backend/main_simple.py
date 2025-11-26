@@ -489,6 +489,260 @@ async def get_document_chunks(document_id: int):
     return doc.get("chunks", [])
 
 
+
+
+@app.post("/api/export")
+async def export_results(request: dict):
+    """Export search results as PDF or DOCX."""
+    try:
+        format_type = request.get("format", "pdf").lower()
+        question = request.get("question", "")
+        answer = request.get("answer", "")
+        citations = request.get("citations", [])
+        
+        if format_type == "pdf":
+            from reportlab.lib.pagesizes import letter
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.units import inch
+            from reportlab.lib import colors
+            from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+            from io import BytesIO
+            
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(
+                buffer, 
+                pagesize=letter,
+                title="Search Results",
+                author="Multimodal RAG",
+                leftMargin=0.75*inch,
+                rightMargin=0.75*inch,
+                topMargin=0.75*inch,
+                bottomMargin=0.75*inch
+            )
+            
+            styles = getSampleStyleSheet()
+            
+            # Custom styles with enhanced formatting
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                textColor=colors.HexColor('#1e40af'),
+                spaceAfter=6,
+                spaceBefore=12,
+                alignment=TA_CENTER,
+                fontName='Helvetica-Bold'
+            )
+            
+            subtitle_style = ParagraphStyle(
+                'Subtitle',
+                parent=styles['Normal'],
+                fontSize=10,
+                textColor=colors.HexColor('#6b7280'),
+                spaceAfter=20,
+                alignment=TA_CENTER,
+                fontName='Helvetica-Oblique'
+            )
+            
+            heading_style = ParagraphStyle(
+                'CustomHeading',
+                parent=styles['Heading2'],
+                fontSize=14,
+                textColor=colors.HexColor('#3b82f6'),
+                spaceAfter=8,
+                spaceBefore=12,
+                fontName='Helvetica-Bold',
+                borderPadding=8,
+                borderColor=colors.HexColor('#3b82f6'),
+                borderWidth=0,
+                leftIndent=0
+            )
+            
+            body_style = ParagraphStyle(
+                'CustomBody',
+                parent=styles['BodyText'],
+                fontSize=11,
+                textColor=colors.HexColor('#1f2937'),
+                alignment=TA_JUSTIFY,
+                spaceAfter=6,
+                leading=16
+            )
+            
+            citation_header_style = ParagraphStyle(
+                'CitationHeader',
+                parent=styles['Normal'],
+                fontSize=10,
+                textColor=colors.HexColor('#059669'),
+                fontName='Helvetica-Bold',
+                spaceAfter=4
+            )
+            
+            citation_body_style = ParagraphStyle(
+                'CitationBody',
+                parent=styles['Normal'],
+                fontSize=9,
+                textColor=colors.HexColor('#374151'),
+                leftIndent=20,
+                spaceAfter=8,
+                leading=13
+            )
+            
+            story = []
+            
+            # Title with decorative border
+            title_data = [[Paragraph("Search Results", title_style)]]
+            title_table = Table(title_data, colWidths=[6.5*inch])
+            title_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#eff6ff')),
+                ('BOX', (0, 0), (-1, -1), 2, colors.HexColor('#3b82f6')),
+                ('TOPPADDING', (0, 0), (-1, -1), 16),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 16),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ]))
+            story.append(title_table)
+            story.append(Spacer(1, 0.1*inch))
+            
+            # Timestamp
+            story.append(Paragraph(
+                f"Generated: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}",
+                subtitle_style
+            ))
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Question section with border
+            question_content = [
+                [Paragraph("Question", heading_style)],
+                [Paragraph(question or "No question provided", body_style)]
+            ]
+            question_table = Table(question_content, colWidths=[6.5*inch])
+            question_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dbeafe')),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('BOX', (0, 0), (-1, -1), 1.5, colors.HexColor('#93c5fd')),
+                ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#3b82f6')),
+                ('TOPPADDING', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                ('LEFTPADDING', (0, 0), (-1, -1), 12),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ]))
+            story.append(question_table)
+            story.append(Spacer(1, 0.2*inch))
+            
+            # Answer section with border
+            answer_content = [
+                [Paragraph("Answer", heading_style)],
+                [Paragraph(answer.replace('\n', '<br/>') or "No answer provided", body_style)]
+            ]
+            answer_table = Table(answer_content, colWidths=[6.5*inch])
+            answer_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dcfce7')),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('BOX', (0, 0), (-1, -1), 1.5, colors.HexColor('#86efac')),
+                ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#10b981')),
+                ('TOPPADDING', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                ('LEFTPADDING', (0, 0), (-1, -1), 12),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ]))
+            story.append(answer_table)
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Citations section with enhanced styling
+            if citations:
+                citations_header_data = [[Paragraph(f"Sources & Citations ({len(citations)})", heading_style)]]
+                citations_header_table = Table(citations_header_data, colWidths=[6.5*inch])
+                citations_header_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fef3c7')),
+                    ('BOX', (0, 0), (-1, -1), 1.5, colors.HexColor('#fbbf24')),
+                    ('TOPPADDING', (0, 0), (-1, -1), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 12),
+                ]))
+                story.append(citations_header_table)
+                story.append(Spacer(1, 0.15*inch))
+                
+                for i, citation in enumerate(citations, 1):
+                    citation_data = [
+                        [Paragraph(f"[{i}] {citation.get('source', 'Unknown Source')}", citation_header_style)],
+                        [Paragraph(citation.get('content', 'No content available')[:500] + '...', citation_body_style)]
+                    ]
+                    citation_table = Table(citation_data, colWidths=[6.5*inch])
+                    citation_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f9fafb')),
+                        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#d1d5db')),
+                        ('TOPPADDING', (0, 0), (-1, -1), 8),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                    ]))
+                    story.append(citation_table)
+                    story.append(Spacer(1, 0.1*inch))
+            
+            doc.build(story)
+            buffer.seek(0)
+            
+            from fastapi.responses import StreamingResponse
+            return StreamingResponse(
+                buffer,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename=search_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"}
+            )
+            
+        elif format_type == "docx":
+            from docx import Document
+            from docx.shared import Pt, RGBColor, Inches
+            from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+            from io import BytesIO
+            
+            doc = Document()
+            
+            # Title
+            title = doc.add_heading('Search Results', 0)
+            title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            
+            # Timestamp
+            timestamp_para = doc.add_paragraph()
+            timestamp_run = timestamp_para.add_run(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            timestamp_run.italic = True
+            timestamp_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            
+            doc.add_paragraph()  # Spacing
+            
+            # Question
+            doc.add_heading('Question:', 2)
+            doc.add_paragraph(question)
+            
+            # Answer
+            doc.add_heading('Answer:', 2)
+            doc.add_paragraph(answer)
+            
+            # Citations
+            if citations:
+                doc.add_heading('Citations:', 2)
+                for i, citation in enumerate(citations, 1):
+                    para = doc.add_paragraph(style='List Number')
+                    para.add_run(f"{citation.get('source', 'Unknown')}\n").bold = True
+                    para.add_run(citation.get('content', ''))
+            
+            buffer = BytesIO()
+            doc.save(buffer)
+            buffer.seek(0)
+            
+            from fastapi.responses import StreamingResponse
+            return StreamingResponse(
+                buffer,
+                media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                headers={"Content-Disposition": f"attachment; filename=search_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"}
+            )
+        else:
+            raise HTTPException(status_code=400, detail="Invalid format. Use 'pdf' or 'docx'")
+            
+    except Exception as e:
+        logger.error(f"Error exporting results: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/suggestions")
 async def get_suggestions():
     """Get smart suggestions based on random document chunks."""

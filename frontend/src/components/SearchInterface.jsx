@@ -19,6 +19,7 @@ function SearchInterface({ onResults, selectedDocuments = [], advancedFilters = 
         if (!query.trim()) return;
 
         setLoading(true);
+        const questionText = query; // Store question before clearing
 
         try {
             const requestBody = {
@@ -37,7 +38,7 @@ function SearchInterface({ onResults, selectedDocuments = [], advancedFilters = 
             const response = await queryRAG(requestBody);
 
             if (onResults) {
-                onResults(response.data);
+                onResults(response.data, questionText); // Pass question to parent
             }
         } catch (error) {
             console.error('Search error:', error);
