@@ -59,6 +59,11 @@ DATA_DIR.mkdir(exist_ok=True)
 # In-memory document storage
 documents_store = []
 
+# In-memory search history storage (max 50 items)
+search_history = []
+MAX_HISTORY_SIZE = 50
+
+
 
 def save_metadata():
     """Save document metadata to JSON."""
@@ -94,10 +99,36 @@ def load_metadata():
         logger.error(f"Error loading metadata: {e}")
 
 
+def save_search_history():
+    """Save search history to JSON."""
+    try:
+        import json
+        with open(DATA_DIR / "search_history.json", "w") as f:
+            json.dump(search_history, f, indent=2)
+        logger.info(f"Saved {len(search_history)} search history items")
+    except Exception as e:
+        logger.error(f"Error saving search history: {e}")
+
+
+def load_search_history():
+    """Load search history from JSON."""
+    global search_history
+    try:
+        if (DATA_DIR / "search_history.json").exists():
+            import json
+            with open(DATA_DIR / "search_history.json", "r") as f:
+                search_history = json.load(f)
+            logger.info(f"Loaded {len(search_history)} search history items")
+    except Exception as e:
+        logger.error(f"Error loading search history: {e}")
+
+
+
 @app.on_event("startup")
 async def startup_event():
     """Load state on startup."""
     load_metadata()
+    load_search_history()
     try:
         from embedding_service import load_state
         load_state(DATA_DIR)
@@ -109,6 +140,7 @@ async def startup_event():
 async def shutdown_event():
     """Save state on shutdown."""
     save_metadata()
+    save_search_history()
     try:
         from embedding_service import save_state
         save_state(DATA_DIR)
@@ -559,6 +591,25 @@ async def query(request: dict):
         # Generate answer using RAG
         rag_result = generate_answer(question, enriched_chunks)
         
+        # Log to search history
+        try:
+            import uuid
+            history_item = {
+                "id": str(uuid.uuid4()),
+                "query": question,
+                "timestamp": datetime.now().isoformat(),
+                "result_count": len(search_results)
+            }
+            search_history.insert(0, history_item)  # Add to beginning
+            
+            # Keep only last MAX_HISTORY_SIZE items
+            if len(search_history) > MAX_HISTORY_SIZE:
+                search_history[:] = search_history[:MAX_HISTORY_SIZE]
+            
+            save_search_history()
+        except Exception as e:
+            logger.error(f"Error logging search history: {e}")
+        
         return rag_result
         
     except Exception as e:
@@ -568,6 +619,21 @@ async def query(request: dict):
             "citations": [],
             "context_used": {"text_chunks": 0, "images": 0, "audio_segments": 0}
         }
+
+
+@app.get("/api/search-history")
+async def get_search_history():
+    """Get search history."""
+    return search_history
+
+
+@app.delete("/api/search-history")
+async def clear_search_history():
+    """Clear search history."""
+    global search_history
+    search_history = []
+    save_search_history()
+    return {"message": "Search history cleared"}
 
 
 @app.post("/api/search/text")
