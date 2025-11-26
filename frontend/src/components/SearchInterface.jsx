@@ -99,6 +99,7 @@ function SearchInterface({ onResults, selectedDocuments = [], advancedFilters = 
             <form onSubmit={handleSubmit} className="search-form">
                 <div className="search-input-wrapper">
                     <input
+                        id="search-input"
                         type="text"
                         className="search-input input"
                         placeholder="Ask a question or search across your documents..."
